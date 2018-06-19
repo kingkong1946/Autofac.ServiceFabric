@@ -54,6 +54,22 @@ namespace Autofac.Integration.ServiceFabric.Test
         }
 
         [Fact]
+        public void RegisterStatefulServiceAppliesCustomInterceptor()
+        {
+            var builder = new ContainerBuilder();
+            builder.RegisterStatefulService<StatefulService1, ServiceInterceptor1>("ServiceType");
+            builder.RegisterModule(new ServiceFabricModule());
+            builder.RegisterInstance(new Mock<IStatefulServiceFactoryRegistration>().Object);
+
+            var container = builder.Build();
+
+            var registration = container.RegistrationFor<StatefulService1>();
+            const string metadataKey = "Autofac.Extras.DynamicProxy.RegistrationExtensions.InterceptorsPropertyName";
+            var interceptorServices = (IEnumerable<Service>)registration.Metadata[metadataKey];
+            Assert.Contains(new TypedService(typeof(ServiceInterceptor1)), interceptorServices);
+        }
+
+        [Fact]
         public void RegisterStatelessServiceAppliesInterceptor()
         {
             var builder = new ContainerBuilder();
@@ -67,6 +83,22 @@ namespace Autofac.Integration.ServiceFabric.Test
             const string metadataKey = "Autofac.Extras.DynamicProxy.RegistrationExtensions.InterceptorsPropertyName";
             var interceptorServices = (IEnumerable<Service>)registration.Metadata[metadataKey];
             Assert.Contains(new TypedService(typeof(ServiceInterceptor)), interceptorServices);
+        }
+
+        [Fact]
+        public void RegisterStatelessServiceAppliesCustomInterceptor()
+        {
+            var builder = new ContainerBuilder();
+            builder.RegisterStatelessService<StatelessService1, ServiceInterceptor1>("ServiceType");
+            builder.RegisterModule(new ServiceFabricModule());
+            builder.RegisterInstance(new Mock<IStatelessServiceFactoryRegistration>().Object);
+
+            var container = builder.Build();
+
+            var registration = container.RegistrationFor<StatelessService1>();
+            const string metadataKey = "Autofac.Extras.DynamicProxy.RegistrationExtensions.InterceptorsPropertyName";
+            var interceptorServices = (IEnumerable<Service>)registration.Metadata[metadataKey];
+            Assert.Contains(new TypedService(typeof(ServiceInterceptor1)), interceptorServices);
         }
 
         [Fact]
@@ -420,6 +452,14 @@ namespace Autofac.Integration.ServiceFabric.Test
     {
         public InternalStatelessService(StatelessServiceContext serviceContext)
             : base(serviceContext)
+        {
+        }
+    }
+
+    public class ServiceInterceptor1 : ServiceInterceptor
+    {
+        public ServiceInterceptor1(ILifetimeScope lifetimeScope)
+            : base(lifetimeScope)
         {
         }
     }

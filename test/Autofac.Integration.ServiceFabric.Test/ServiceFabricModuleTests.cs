@@ -21,6 +21,17 @@ namespace Autofac.Integration.ServiceFabric.Test
         }
 
         [Fact]
+        public void RegistersCustomInterceptor()
+        {
+            var builder = new ContainerBuilder();
+            builder.RegisterModule(new ServiceFabricModule<ServiceInterceptor1>());
+            var container = builder.Build();
+
+            var interceptor = container.Resolve<ServiceInterceptor1>();
+            Assert.True(container.IsRegistered(interceptor.GetType()));
+        }
+
+        [Fact]
         public void ActorFactoryRegistrationReceivesProvidedConstructorExceptionCallbackParameter()
         {
             var builder = new ContainerBuilder();

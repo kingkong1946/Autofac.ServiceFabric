@@ -28,13 +28,39 @@ using System;
 namespace Autofac.Integration.ServiceFabric
 {
     /// <summary>
-    /// Autofac module that registers the interceptors required for Service Fabric support.
+    /// Autofac generic module that registers the interceptors required for Service Fabric support.
     /// </summary>
-    internal sealed class ServiceFabricModule : ServiceFabricModule<ServiceInterceptor>
+    internal class ServiceFabricModule<TServiceInterceptor> : Module
     {
+        private readonly Action<Exception> _constructorExceptionCallback;
+
         public ServiceFabricModule(Action<Exception> constructorExceptionCallback = null)
-            : base(constructorExceptionCallback)
         {
+            _constructorExceptionCallback = constructorExceptionCallback ?? (ex => { });
+        }
+
+        protected override void Load(ContainerBuilder builder)
+        {
+            builder.RegisterType<ActorInterceptor>()
+                .InstancePerLifetimeScope();
+
+            builder.RegisterType<TServiceInterceptor>()
+                .InstancePerLifetimeScope();
+
+            builder.RegisterType<ActorFactoryRegistration>()
+                .As<IActorFactoryRegistration>()
+                .WithParameter(TypedParameter.From(_constructorExceptionCallback))
+                .SingleInstance();
+
+            builder.RegisterType<StatelessServiceFactoryRegistration>()
+                .As<IStatelessServiceFactoryRegistration>()
+                .WithParameter(TypedParameter.From(_constructorExceptionCallback))
+                .SingleInstance();
+
+            builder.RegisterType<StatefulServiceFactoryRegistration>()
+                .As<IStatefulServiceFactoryRegistration>()
+                .WithParameter(TypedParameter.From(_constructorExceptionCallback))
+                .SingleInstance();
         }
     }
 }

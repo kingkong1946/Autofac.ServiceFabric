@@ -46,11 +46,22 @@ namespace Autofac.Integration.ServiceFabric
         /// <param name="constructorExceptionCallback">Callback will be invoked if there are an exception thrown during resolving.</param>
         public static void RegisterServiceFabricSupport(this ContainerBuilder builder, Action<Exception> constructorExceptionCallback = null)
         {
+            RegisterServiceFabricSupport<ServiceInterceptor>(builder, constructorExceptionCallback);
+        }
+
+        /// <summary>
+        /// Adds the core services required by the Service Fabric integration with custom service interceptor.
+        /// </summary>
+        /// <param name="builder">The container builder to register the services with.</param>
+        /// <param name="constructorExceptionCallback">Callback will be invoked if there are an exception thrown during resolving.</param>
+        public static void RegisterServiceFabricSupport<TInterceptor>(this ContainerBuilder builder, Action<Exception> constructorExceptionCallback = null)
+        where TInterceptor : ServiceInterceptor
+        {
             if (builder == null) throw new ArgumentNullException(nameof(builder));
 
             if (builder.Properties.ContainsKey(MetadataKey)) return;
 
-            builder.RegisterModule(new ServiceFabricModule(constructorExceptionCallback));
+            builder.RegisterModule(new ServiceFabricModule<TInterceptor>(constructorExceptionCallback));
 
             builder.Properties.Add(MetadataKey, true);
         }
